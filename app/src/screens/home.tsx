@@ -1,27 +1,30 @@
-console.log("shit loaded sire");
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput } from 'react-native';
+import { StyleSheet, Text, View, TextInput, ScrollView } from 'react-native';
+import JobList from './joblist';
 
 const Index = () => {
   const [number, onChangeNumber] = useState('');
 
+  console.log("Index screen loaded");
+
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <TextInput
-        style={styles.input} // Added missing input style
+        style={styles.input}
         onChangeText={onChangeNumber}
         value={number}
         placeholder="Enter a number"
         keyboardType="numeric"
       />
-      <Text style={styles.text}>test</Text>
-    </View>
+      <Text style={styles.text}>Test</Text>
+      <JobList />
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -32,12 +35,12 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 40,
-    width: 200, // Set width so it's visible
+    width: 200,
     borderColor: '#ccc',
     borderWidth: 1,
     borderRadius: 5,
     paddingHorizontal: 10,
-    marginBottom: 10, // Space between input and text
+    marginBottom: 10,
   },
 });
 

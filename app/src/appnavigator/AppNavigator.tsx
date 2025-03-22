@@ -17,7 +17,7 @@ const AppNavigator = () => {
       >
         <Stack.Screen
           name="empleyo"
-          component={Login}
+          component={Index}
           options={{ headerBackVisible: true }}
         />
         <Stack.Screen name="Login" component={Login} />
