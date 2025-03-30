@@ -1,6 +1,5 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import uuid from 'react-native-uuid';
-
 interface Theme {
   background: string;
   cardBackground: string;
@@ -35,38 +34,65 @@ interface GlobalContextProps {
   jobs: Job[];
   fetchJobs: () => void;
   loading: boolean;
+  bookmarkedJobs: string[]; // Array of job IDs that are bookmarked
+  addToBookmarks: (jobId: string) => void; // Function to add a job to bookmarks
+  removeFromBookmarks: (jobId: string) => void; // Function to remove a job from bookmarks
 }
 
 const lightTheme: Theme = {
-  background: '#fff',
-  cardBackground: '#d1d8bf',
-  text: '#000',
-  dominant: '#3971ef',
-  accent: '#f86870',
+  background: '#f7f7f7', // Light gray background
+  cardBackground: '#fff', // White cards
+  text: '#333', // Dark text
+  dominant: '#007AFF', // iOS blue
+  accent: '#FFD700', // Gold for accents
 };
 
 const darkTheme: Theme = {
-  background: '#121212',
-  cardBackground: '#1c1c1c',
-  text: '#e0e0e0',
-  dominant: '#3971ef',
-  accent: '#f86870',
+  background: '#121212', // Dark background
+  cardBackground: '#1c1c1c', // Slightly lighter cards
+  text: '#e0e0e0', // Light text
+  dominant: '#007AFF', // iOS blue
+  accent: '#FFD700', // Gold for accents
 };
 
 const GlobalContext = createContext<GlobalContextProps | undefined>(undefined);
 
 export const GlobalProvider = ({ children }: { children: ReactNode }) => {
+  // Theme State
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const toggleDarkMode = () => setIsDarkMode(prev => !prev);
+  const toggleDarkMode = async () => {
+    const newMode = !isDarkMode;
+    setIsDarkMode(newMode);
+    await AsyncStorage.setItem('isDarkMode', JSON.stringify(newMode)); // Persist theme preference
+  };
+
+  // Load persisted theme preference on app startup
+  useEffect(() => {
+    const loadThemePreference = async () => {
+      try {
+        const storedMode = await AsyncStorage.getItem('isDarkMode');
+        if (storedMode !== null) {
+          setIsDarkMode(JSON.parse(storedMode));
+        }
+      } catch (error) {
+        console.error('Error loading theme preference:', error);
+      }
+    };
+    loadThemePreference();
+  }, []);
+
   const theme = isDarkMode ? darkTheme : lightTheme;
 
-  // Job state and fetching
+  // Job State and Fetching
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  
+
   const fetchJobs = async () => {
     try {
       const response = await fetch('https://empllo.com/api/v1');
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
       const data = await response.json();
       console.log("Fetched success");
       // Check if data is an array or if the jobs are in data.jobs
@@ -104,8 +130,29 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     fetchJobs();
   }, []);
 
+  // Bookmark State and Actions
+  const [bookmarkedJobs, setBookmarkedJobs] = useState<string[]>([]);
+
+  const addToBookmarks = (jobId: string) => {
+    setBookmarkedJobs(prevBookmarks => [...prevBookmarks, jobId]);
+  };
+
+  const removeFromBookmarks = (jobId: string) => {
+    setBookmarkedJobs(prevBookmarks => prevBookmarks.filter(id => id !== jobId));
+  };
+
   return (
-    <GlobalContext.Provider value={{ isDarkMode, theme, toggleDarkMode, jobs, fetchJobs, loading }}>
+    <GlobalContext.Provider value={{ 
+      isDarkMode, 
+      theme, 
+      toggleDarkMode, 
+      jobs, 
+      fetchJobs, 
+      loading, 
+      bookmarkedJobs, 
+      addToBookmarks, 
+      removeFromBookmarks 
+    }}>
       {children}
     </GlobalContext.Provider>
   );
